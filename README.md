@@ -130,5 +130,147 @@ If you want, I can **also add a “Copy GoogleService code” snippet section** 
 
 Do you want me to do that?
 
+================================================================================
+
+1. Create a Google Cloud Project
+
+Go to Google Cloud Console
+https://console.cloud.google.com
+
+Create a new project.
+
+Go to APIs & Services → Library
+
+Search and enable:
+
+Google Calendar API
+
+2. Create OAuth Credentials
+
+Go to APIs & Services → Credentials
+
+Click Create Credentials → OAuth Client ID
+
+Choose:
+
+Application type: Web application
+
+Add Authorized redirect URI:
+
+https://your-domain.com/oauth/google/callback
+
+
+Download the client_secret_xxx.json file.
+
+Put this file inside your Laravel project:
+
+storage/app/google/client_secret.json
+
+3. Install Google API Package in Laravel
+composer require google/apiclient:^2.0
+
+4. Add Google Client Setup (Service Class)
+
+Create a file:
+
+app/Services/GoogleService.php
+
+<?php
+
+namespace App\Services;
+
+use Google_Client;
+use Google_Service_Calendar;
+
+class GoogleService
+{
+    public function client()
+    {
+        $client = new Google_Client();
+        $client->setAuthConfig(storage_path('app/google/client_secret.json'));
+        $client->addScope(Google_Service_Calendar::CALENDAR);
+        $client->setRedirectUri(url('oauth/google/callback'));
+        $client->setAccessType('offline');
+        $client->setPrompt('consent');
+
+        return $client;
+    }
+}
+
+5. Add Routes
+
+routes/web.php
+
+use App\Services\GoogleService;
+use Illuminate\Support\Facades\Route;
+
+Route::get('oauth/google', function (GoogleService $google) {
+    $client = $google->client();
+    return redirect()->away($client->createAuthUrl());
+});
+
+Route::get('oauth/google/callback', function (GoogleService $google) {
+    $client = $google->client();
+    $token = $client->fetchAccessTokenWithAuthCode(request('code'));
+
+    session(['google_token' => $token]);
+
+    return 'Google Connected Successfully!';
+});
+
+Route::get('create-google-meet', function (GoogleService $google) {
+    $client = $google->client();
+    $client->setAccessToken(session('google_token'));
+
+    $service = new Google_Service_Calendar($client);
+
+    // Calendar Event
+    $event = new \Google_Service_Calendar_Event([
+        'summary' => 'Meeting with Client',
+        'description' => 'Discuss project details',
+        'start' => [
+            'dateTime' => '2025-11-20T10:00:00',
+            'timeZone' => 'Asia/Dhaka',
+        ],
+        'end' => [
+            'dateTime' => '2025-11-20T11:00:00',
+            'timeZone' => 'Asia/Dhaka',
+        ],
+        'conferenceData' => [
+            'createRequest' => [
+                'requestId' => uniqid(),
+                'conferenceSolutionKey' => [
+                    'type' => "hangoutsMeet"
+                ]
+            ]
+        ]
+    ]);
+
+    $createdEvent = $service->events->insert(
+        'primary',
+        $event,
+        ['conferenceDataVersion' => 1]
+    );
+
+    return [
+        'event_id' => $createdEvent->id,
+        'google_meet_link' => $createdEvent->hangoutLink,
+    ];
+});
+
+6. Output Example
+
+After opening:
+
+https://your-app.com/create-google-meet
+
+
+You will get:
+
+{
+  "event_id": "asdasdasjdasd",
+  "google_meet_link": "https://meet.google.com/xxx-xxxx-xxx"
+}
+
 
 
