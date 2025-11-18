@@ -63,3 +63,72 @@ A **Laravel 10** application that allows tutors to schedule **Google Meet meetin
 ```bash
 git clone https://github.com/yourusername/laravel-google-meet.git
 cd laravel-google-meet
+
+
+```
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+```
+
+Google API Credentials
+Step 1: Create a Google Cloud Project
+
+Go to Google Cloud Console
+
+Click Select a Project → New Project
+
+Name it (e.g., Laravel Google Meet) and click Create
+
+Step 2: Enable APIs
+
+Enable the following APIs:
+
+Google Calendar API
+
+Google Drive API
+
+Step 3: Create OAuth Client ID
+
+Go to APIs & Services → Credentials → Create Credentials → OAuth Client ID
+
+Application type: Web Application
+
+Add Authorized redirect URI:
+```bash
+http://yourdomain/oauth/google/callback
+
+```
+Download JSON and save it in your project:
+
+storage/app/public/google/client_secret.json
+
+
+
+License
+
+This project is open-sourced under the MIT License
+.
+
+
+---
+
+This **README.md** is ready to copy-paste into your GitHub repo. ✅  
+
+It includes:  
+
+- Centered **Laravel logo**  
+- **Build & version badges**  
+- **Sections for features, setup, API credentials, usage, notes, license**  
+- **Code blocks** for all commands  
+
+---
+
+If you want, I can **also add a “Copy GoogleService code” snippet section** to the README so users can click a button to copy the full service class.  
+
+Do you want me to do that?
+
+
+
